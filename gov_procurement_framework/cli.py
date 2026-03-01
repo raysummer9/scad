@@ -26,6 +26,7 @@ SOURCE_COUNTRY_MAP = {
     "uk_contracts": "United Kingdom",
     "us_sam": "United States",
 }
+ALL_MINISTRIES_OPTION = "All ministries"
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -37,6 +38,11 @@ def _build_parser() -> argparse.ArgumentParser:
         "--source",
         required=False,
         help="Source key from registry or 'all'. Omit for guided country/ministry selection.",
+    )
+    scrape.add_argument(
+        "--country",
+        required=False,
+        help="Preset country for guided mode (e.g. nigeria). Skips country prompt.",
     )
     scrape.add_argument(
         "--export",
@@ -80,6 +86,19 @@ def _prompt_choice(label: str, options: list[str]) -> str:
         idx = int(raw)
         if 1 <= idx <= len(options):
             return options[idx - 1]
+
+
+def _resolve_country_choice(raw_country: str, available_countries: list[str]) -> str:
+    normalized_map = {
+        _slugify(country): country for country in available_countries
+    }
+    key = _slugify(raw_country)
+    if key in normalized_map:
+        return normalized_map[key]
+    raise ValueError(
+        f"Unknown country preset: {raw_country}. "
+        f"Available: {', '.join(sorted(available_countries))}"
+    )
 
 
 def _resolve_sources(requested_source: str, known_sources: list[str]) -> list[str]:
@@ -149,7 +168,11 @@ async def _run_interactive_scrape(
 ) -> int:
     logger = get_logger("gov_procurement")
     grouped = _group_sources_by_country(sorted(registry.keys()))
-    selected_country = _prompt_choice("country", sorted(grouped.keys()))
+    available_countries = sorted(grouped.keys())
+    if args.country:
+        selected_country = _resolve_country_choice(args.country, available_countries)
+    else:
+        selected_country = _prompt_choice("country", available_countries)
     country_sources = grouped[selected_country]
 
     records = await _fetch_records_for_sources(
@@ -193,10 +216,16 @@ async def _run_interactive_scrape(
         )
         return 1
 
-    selected_ministry = _prompt_choice("ministry", ministries)
-    filtered_records = [
-        record for record in records if str(record.get("ministry")).strip() == selected_ministry
-    ]
+    ministry_options = [ALL_MINISTRIES_OPTION, *ministries]
+    selected_ministry = _prompt_choice("ministry", ministry_options)
+    if selected_ministry == ALL_MINISTRIES_OPTION:
+        filtered_records = records
+        output_base = f"{_slugify(selected_country)}_all_ministries"
+    else:
+        filtered_records = [
+            record for record in records if str(record.get("ministry")).strip() == selected_ministry
+        ]
+        output_base = f"{_slugify(selected_country)}_{_slugify(selected_ministry)}"
     if not filtered_records:
         print("No records found for selected country.")
         print("No ministries found.")
@@ -212,7 +241,6 @@ async def _run_interactive_scrape(
         )
         return 1
 
-    output_base = f"{_slugify(selected_country)}_{_slugify(selected_ministry)}"
     if args.export in ("json", "both"):
         json_exporter.export(filtered_records, _build_filename(output_base, "json"))
     if args.export in ("csv", "both"):

@@ -26,13 +26,20 @@ If you want a plain-language explanation of what this project does and how to ru
   - Then choose:
     - Country (from available countries)
     - Ministry (from ministries found in that country's records)
+- Guided mode with preset country (skips country prompt):
+  - `PYTHONPATH="." python3 -m gov_procurement_framework.cli scrape --country nigeria --export both --limit 10`
 - Advanced source mode (optional):
   - `PYTHONPATH="." python3 -m gov_procurement_framework.cli scrape --source kenya_ppra --export both --limit 10`
 
 ## Supported Sources
 
 - `kenya_ppra`: `https://tenders.go.ke/api/active-tenders`
-- `nigeria_bpp`: `https://www.bpp.gov.ng/category/procurement/feed/`
+- `nigeria_bpp`: multi-feed aggregator currently using:
+  - `https://publicprocurement.ng/feed/`
+  - `https://publicprocurement.ng/category/tender/feed/`
+  - `https://publicprocurement.ng/category/pre-qualification-notice/feed/`
+  - `https://publicprocurement.ng/category/expression-of-interest-eoi/feed/`
+  - `https://publicprocurement.ng/category/general-procurement-notice/feed/`
 - `uk_contracts`: `https://www.contractsfinder.service.gov.uk/Notices/RssFeed`
 - `us_sam`: currently uses a placeholder endpoint for pipeline testing (`https://jsonplaceholder.typicode.com/posts`)
 

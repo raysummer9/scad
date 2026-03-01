@@ -37,7 +37,12 @@ These are the current built-in sources:
 - **Kenya PPRA / PPIP (Kenya)**  
   Website/API: `https://tenders.go.ke/api/active-tenders`
 - **BPP Procurement Feed (Nigeria)**  
-  Website/feed: `https://www.bpp.gov.ng/category/procurement/feed/`
+  Website/feeds (multiple):  
+  `https://publicprocurement.ng/feed/`  
+  `https://publicprocurement.ng/category/tender/feed/`  
+  `https://publicprocurement.ng/category/pre-qualification-notice/feed/`  
+  `https://publicprocurement.ng/category/expression-of-interest-eoi/feed/`  
+  `https://publicprocurement.ng/category/general-procurement-notice/feed/`
 - **Contracts Finder Feed (United Kingdom)**  
   Website/feed: `https://www.contractsfinder.service.gov.uk/Notices/RssFeed`
 
@@ -116,6 +121,12 @@ Then follow the prompts:
 - Choose ministry (from available ministries in that country)
 
 After you select both, the tool generates output files.
+
+If you already know the country, you can skip the country question:
+
+```bash
+PYTHONPATH="." .venv/bin/python -m gov_procurement_framework.cli scrape --country nigeria --export both --limit 10
+```
 
 ### 5) Open results
 
